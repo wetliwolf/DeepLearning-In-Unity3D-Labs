@@ -94,4 +94,96 @@ namespace GeneticAlgorithm
             // Set in how many parts the genome should be divided in
             int parts = random.Next(2, 3);
             // Set the splitting points
-            int[] splitPoints = new in
+            int[] splitPoints = new int[parts - 1];
+            for (int i = 0; i < splitPoints.Length; i++)
+            {
+                splitPoints[i] = (int)Math.Ceiling(random.NextDouble() * newGenome.Length);
+            }
+            splitPoints = splitPoints.OrderBy(key => key).ToArray();
+
+            // Mixing the fathers genomes
+            bool takeFirstGenome = true;
+            int currSplit = 0;
+            for (int i = 0; i < newGenome.Length; i++)
+            {
+                if (currSplit < splitPoints.Length && i > splitPoints[currSplit])
+                {
+                    takeFirstGenome = !takeFirstGenome;
+                    currSplit++;
+                }
+
+                // Apply some mutations
+                mutationProb = 1 / fitness.Max();
+                if (mutationProb > .2) mutationProb = .2;
+                if (fitness.Max() < 0) {
+                    mutationProb = .5;
+                }
+
+                /*int m1 = genome1[i], m2 = genome2[i], m = random.Next(-40, 40);
+                if (random.NextDouble() < mutationProb)
+                {
+                    m1 += m;
+                    m2 += m;
+
+                    if (m1 < -128) m1 = -128;
+                    if (m1 > 127) m1 = 127;
+                    if (m2 < -128) m2 = -128;
+                    if (m2 > 127) m2 = 127;
+                }
+                if (takeFirstGenome) newGenome[i] = (sbyte)m1;
+                else newGenome[i] = (sbyte)m2;*/
+
+                if (takeFirstGenome) newGenome[i] = random.NextDouble() < mutationProb ? (sbyte)random.Next(-128, 128) : genome1[i];
+                else newGenome[i] = random.NextDouble() < mutationProb ? (sbyte)random.Next(-128, 127) : genome2[i];
+            }
+            return newGenome;
+        }
+        
+        public void resetGenerations()
+        {
+            brains = null;
+            fitness = null;
+        }
+
+        public int getGeneration()
+        {
+            return current_generation;
+        }
+
+        public double[] executeGenome(int genomeId, double[] inputs)
+        {
+            return brains[genomeId].elaborate(inputs);
+        }
+
+        public double[][] executeGeneration(double[] inputs)
+        {
+            double[][] result = new double[genomes_count][];
+            for (int i = 0; i < genomes_count; i++)
+            {
+                result[i] = brains[i].elaborate(inputs);
+            }
+            return result;
+        }
+
+        public void setFitness(double[] fitness_values)
+        {
+            fitness = fitness_values;
+        }
+
+        public void printANetwork(int genomeId, Material neuronMaterial)
+        {
+            brains[genomeId].print(neuronMaterial);
+        }
+
+        public NeuroNetwork getBrain(int id)
+        {
+            return brains[id];
+        }
+
+        public sbyte[] getGenome(int id)
+        {
+            return genomes[id];
+        }
+
+    }
+}
